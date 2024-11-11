@@ -1,0 +1,87 @@
+1. All these risks types are already defined in other module
+
+2. Python files should be under src/
+3. It seems to me that the pre-commit check is not working!
+4. Maybe create an exception is better.
+def load_dataset(self, risk_type):
+        if risk_type not in RISK_TYPES:
+            print(f"Invalid risk type: {risk_type}")
+            return None
+5. if not data
+ def preprocess_data(self, risk_type):
+        data = self.load_dataset(risk_type)
+        if data is not None:
+6. General suggestion is to stop using "inplace" for df operations
+if data is not None:
+            # Example preprocessing steps
+            data.dropna(inplace=True)
+            data.reset_index(drop=True, inplace=True)
+7. This example usage should be in the PR and in the test. Not here.
+print(data)
+# if data is not None:
+#     handler.preprocess_data('bias')
+#     handler.save_data('bias', 'parquet')
+
+8. don't need this
+
+output_path = setup_data_folder / "bias.parquet"
+    assert output_path.exists()
+
+if __name__ == "__main__":
+9. Can we create this handler as a fixture?
+return data_folder
+
+def test_load_dataset_csv(setup_data_folder):
+    handler = DatasetHandler(data_folder=setup_data_folder)
+
+10. It seems to me that the pre-commit check is not working!
+11. Jai, could you please ignore/exclude all the checkpoint files in the .gitignore file? We don't need them in the remote repos.
+
+@@ -0,0 +1,5 @@
+"""Top-level package for risk-scanner"""
+
+12. For each of the dataset you collected in the data, have you make any change in each of them? If so, could you please share the change you made? I thought it would upon to individual who is working on each risk to modify the file for the best results.
+
+It is hard to understand the scope of this PR work; therefore, it it possible to update the PR description to include the changes and scope?
+
+13. I noticed that some of the formatting doesn't follow ruff rules. Please run pre-commit install and run the pre-commit checks.
+
+14. I also noticed that this data curation branch is based an older version of main. It's better to rebase this branch with main as some logics have been changed in the other modules during the passed three weeks, which may impact the dataset_handler module.
+
+15. There would an issue here - pii has two files. Our developers may save more than one datasets for some of the risks, e.g. one dataset includes 1000 samples, the other include 100.
+
+Is it better to save the dataset name as a configurable variable instead risk_type?
+
+Let's discuss this, @EricRen-LBG @JehangirLBG @gagganjabbalLBG
+
+16. Do we need this function as the load_dataset(function) is already doing the job?
+def get_data(self, risk_type):
+        return self.load_dataset(risk_type)
+
+
+
+17. These are basic data operations. I'm not sure if they bring the benefit to the data_handler Class. I may have missed some conversations. Could we discuss the purpose the this work in our next catch up call?
+def preprocess_data(self, risk_type):
+        data = self.load_dataset(risk_type)
+        if data is not None:
+            # Example preprocessing steps
+            data.dropna(inplace=True)
+            data.reset_index(drop=True, inplace=True)
+            self.datasets[risk_type] = data
+        else:
+            print(f"No dataset loaded for {risk_type}")
+
+    def save_data(self, risk_type, output_format='csv'):
+        if risk_type in self.datasets:
+            output_path = os.path.join(self.data_folder, f"{risk_type}.{output_format}")
+            if output_format == 'csv':
+                self.datasets[risk_type].to_csv(output_path, index=False)
+            elif output_format == 'parquet':
+                self.datasets[risk_type].to_parquet(output_path, index=False)
+            else:
+                print(f"Unsupported format: {output_format}")
+        else:
+            print(f"No dataset loaded for {risk_type}")
+def __init__(self, data_folder='data'):
+        self.data_folder = data_folder
+        self.datasets = {}
